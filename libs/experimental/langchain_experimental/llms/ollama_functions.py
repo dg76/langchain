@@ -315,11 +315,16 @@ class OllamaFunctions(ChatOllama):
         try:
             parsed_chat_result = json.loads(chat_generation_content)
         except json.JSONDecodeError:
-            raise ValueError(
-                f"""'{self.model}' did not respond with valid JSON. 
-                Please try again. 
-                Response: {chat_generation_content}"""
-            )
+            # try to remove the markdown block "```json" and "```" if it exists
+            chat_generation_content = chat_generation_content.replace("```json\n", "").replace("```", "")
+            try:
+                parsed_chat_result = json.loads(chat_generation_content)
+            except json.JSONDecodeError:
+                raise ValueError(
+                    f"""'{self.model}' did not respond with valid JSON. 
+                    Please try again. 
+                    Response: {chat_generation_content}"""
+                )
         called_tool_name = parsed_chat_result["tool"]
         called_tool = next(
             (fn for fn in functions if fn["name"] == called_tool_name), None
